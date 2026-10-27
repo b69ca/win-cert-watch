@@ -47,6 +47,12 @@ Check("store scope status and count consistency", () => {
     Reject(()=>RoundTrip(Evidence() with{Stores=[]})); Reject(()=>RoundTrip(Evidence() with{Stores=[new("CurrentUser","complete",0,0,[]),new("CurrentUser","complete",0,0,[])]}));
 });
 Check("size and certificate limits", () => { Reject(()=>Snapshot.Parse(new byte[Snapshot.MaxBytes+1])); Reject(()=>RoundTrip(Evidence(Enumerable.Repeat(Cert(),Snapshot.MaxCertificates+1).ToArray()))); });
+Check("PowerShell UTF-8 and UTF-16 BOM snapshots replay strictly", () => {
+    var text=JsonSerializer.Serialize(Evidence(Cert()),Snapshot.Json);
+    foreach(var encoding in new Encoding[]{new UTF8Encoding(true,true),new UnicodeEncoding(false,true,true),new UnicodeEncoding(true,true,true)})
+        Assert(Snapshot.Parse(encoding.GetPreamble().Concat(encoding.GetBytes(text)).ToArray()).Stores[0].Certificates.Length==1);
+    Reject(()=>Snapshot.Parse([0xFF,0xFE,0x00]));
+});
 Check("ordering and cross-store same thumbprint", () => { var r=Evidence(Cert(id:'B'),Cert(after:10)); var result=Analyzer.Analyze(r,30); Assert(result.Findings.Single().Thumbprint==new string('A',40)); var s=r.Stores[0] with{Location="LocalMachine"}; Assert(RoundTrip(r with{Stores=[r.Stores[0],s]}).Stores.Length==2); });
 Check("snapshot file round trip and CLI exit codes", () => {
     string dir=Path.Combine(Path.GetTempPath(),Guid.NewGuid().ToString("N")); Directory.CreateDirectory(dir);

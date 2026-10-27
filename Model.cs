@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace WinCertWatch;
 
@@ -46,6 +47,14 @@ public static partial class Snapshot
     public static Report Parse(byte[] bytes)
     {
         if (bytes.Length > MaxBytes) throw new ArgumentException("Snapshot exceeds 8 MiB.");
+        // Windows PowerShell 5.1 redirection writes UTF-16LE; PowerShell 7 writes UTF-8.
+        // Accept explicit BOMs only, without guessing encodings or replacing bad bytes.
+        if (bytes.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF })) bytes = bytes[3..];
+        else if (bytes.AsSpan().StartsWith(new byte[] { 0xFF, 0xFE }))
+            bytes = Encoding.UTF8.GetBytes(new UnicodeEncoding(false, true, true).GetString(bytes, 2, bytes.Length - 2));
+        else if (bytes.AsSpan().StartsWith(new byte[] { 0xFE, 0xFF }))
+            bytes = Encoding.UTF8.GetBytes(new UnicodeEncoding(true, true, true).GetString(bytes, 2, bytes.Length - 2));
+        if (bytes.Length > MaxBytes) throw new ArgumentException("Decoded snapshot exceeds 8 MiB.");
         using var doc = JsonDocument.Parse(bytes, new() { MaxDepth = 16 });
         RejectDuplicates(doc.RootElement);
         var report = doc.Deserialize<Report>(Json) ?? throw new ArgumentException("Missing report.");

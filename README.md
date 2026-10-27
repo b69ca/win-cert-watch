@@ -21,7 +21,7 @@ Download `win-cert-watch-1.0.0-win-x64.zip` and `SHA256SUMS.txt` from [Releases]
 .\win-cert-watch.exe --help
 ```
 
-JSON is both a report and the offline input format. Offline analysis works on Windows, Linux and macOS with .NET 10 or a suitable build. Captured evidence and capture time are preserved; saved findings/status are ignored and recalculated. Analysis is always relative to **capture time**, not today's date. Recollect to assess current state. `--days` defaults to 30 even when replaying a report created with a different window.
+JSON is both a report and the offline input format. UTF-8 (with or without BOM) and BOM-marked UTF-16LE/BE are accepted, including Windows PowerShell 5.1 redirected output. Offline analysis works on Windows, Linux and macOS with .NET 10 or a suitable build. Captured evidence and capture time are preserved; saved findings/status are ignored and recalculated. Analysis is always relative to **capture time**, not today's date. Recollect to assess current state. `--days` defaults to 30 even when replaying a report created with a different window.
 
 ## Options
 

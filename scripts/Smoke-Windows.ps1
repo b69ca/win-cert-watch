@@ -49,6 +49,11 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Text replay failed.' }
     & $exe --input $reportPath --days 7 --json | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Threshold override failed.' }
+    # Exercise exactly the README redirection command in Windows PowerShell 5.1.
+    & $exe --scope user --json > $reportPath
+    if ($LASTEXITCODE -ne 0) { throw 'Redirected collection failed.' }
+    & $exe --input $reportPath --json | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'PowerShell-redirected replay failed.' }
     & $exe --scope user --json | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'User scope failed.' }
     & $exe --scope machine --json | Out-Null
